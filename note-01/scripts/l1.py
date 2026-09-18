@@ -3,9 +3,6 @@ import pandas as pd
 import copy
 
 df = pd.read_csv("../data/lin1d.csv")
-x = df["x"].to_numpy()
-y = df["y"].to_numpy()
-convergeEpisilon = 1e-6
 
 class Hypothesis:
     theta0: float
@@ -14,40 +11,88 @@ class Hypothesis:
     def calculate(self, x: float) -> float:
         return self.theta0 + self.theta1 * x
 
-    def __init__(self, theta0, theta1):
+    def __init__(self, theta0 : float, theta1 : float):
         self.theta1 = theta1
         self.theta0 = theta0
         return
 
-h = Hypothesis(0., 0.)
-alpha = 1e-2
-dataSize = df.shape[0]      # this unifies the alpha so that convergence is less relied on batch size
+def computeJ(h: Hypothesis, df:pd.DataFrame) -> float:
+    x = df["x"].to_numpy()
+    y = df["y"].to_numpy()
+    res = 0.
+    for xi, yi in zip(x, y):
+        res += 1/2 * (h.calculate(xi) - yi) ** 2
+    return res
 
-print(dataSize)
 
-def batchUpdate() -> bool:
-    global h, alpha, convergeEpisilon, dataSize
+def batchUpdate(
+        h: Hypothesis,
+        alpha: float,
+        data : pd.DataFrame,
+        tolerance: float,
+) -> bool:
+    x = df["x"].to_numpy()
+    y = df["y"].to_numpy()
+    dataSize = data.shape[0]
     _h = copy.copy(h)
     for xi, yi in zip(x, y):
         h.theta0 -= alpha / dataSize * (_h.calculate(xi) - yi)
         h.theta1 -= alpha / dataSize * (_h.calculate(xi) - yi) * xi
     if (
-        abs(_h.theta1 - h.theta1) <= convergeEpisilon 
-        and abs (_h.theta0 - h.theta0) <= convergeEpisilon
+        abs(_h.theta1 - h.theta1) <= tolerance 
+        and abs (_h.theta0 - h.theta0) <= tolerance
     ):
         return True
     return False
 
-t = 0
-T = 10000
-while(not batchUpdate()):
-    t+=1
-    if t>=T:
-        print("Not converging after " + str(T) + " iterations!")
-        print(f"theta0: {h.theta0:.6f}")
-        print(f"theta1: {h.theta1:.6f}")
-        exit(1)
+# t = 0
+# T = 10000
+# while(not batchUpdate()):
+#     t+=1
+#     if t>=T:
+#         print("Not converging after " + str(T) + " iterations!")
+#         print(f"theta0: {h.theta0:.6f}")
+#         print(f"theta1: {h.theta1:.6f}")
+#         exit(1)
 
-print("Converged after " + str(t) + " iterations!")
+# print("Converged after " + str(t) + " iterations!")
+# print(f"theta0: {h.theta0:.6f}")
+# print(f"theta1: {h.theta1:.6f}")
+
+def runBatchGD(
+        h: Hypothesis,
+        alpha : float, 
+        maxIterations : int,
+        tolerance : float,
+        data : pd.DataFrame
+    ) -> tuple[Hypothesis, bool, list[float]]:
+    t = 0
+    costPath = []
+    costPath.append(computeJ(h, df))
+    while(not batchUpdate(
+        h, alpha, data, tolerance
+    )):
+        t+=1
+        costPath.append(computeJ(h, df))
+        if t>=maxIterations:
+            return h, False, costPath
+    return h, True, costPath
+
+    
+h, converged, path = runBatchGD(
+    Hypothesis(0., 0.),
+    2e-2,
+    int(2e4),
+    1e-6,
+    df
+)
+
+print("Converged" if converged else "Not converged")
+print(f"iterations: {len(path) - 1}")
 print(f"theta0: {h.theta0:.6f}")
 print(f"theta1: {h.theta1:.6f}")
+print(f"J initial: {path[0]:.6f}")
+print(f"J final:   {path[-1]:.6f}")
+
+
+
