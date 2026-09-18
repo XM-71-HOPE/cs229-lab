@@ -20,14 +20,17 @@ class Hypothesis:
         return
 
 h = Hypothesis(0., 0.)
-alpha = 2e-5
+alpha = 1e-2
+dataSize = df.shape[0]      # this unifies the alpha so that convergence is less relied on batch size
+
+print(dataSize)
 
 def batchUpdate() -> bool:
-    global h, alpha, convergeEpisilon
+    global h, alpha, convergeEpisilon, dataSize
     _h = copy.copy(h)
     for xi, yi in zip(x, y):
-        h.theta0 -= alpha * (_h.calculate(xi) - yi)
-        h.theta1 -= alpha * (_h.calculate(xi) - yi) * xi
+        h.theta0 -= alpha / dataSize * (_h.calculate(xi) - yi)
+        h.theta1 -= alpha / dataSize * (_h.calculate(xi) - yi) * xi
     if (
         abs(_h.theta1 - h.theta1) <= convergeEpisilon 
         and abs (_h.theta0 - h.theta0) <= convergeEpisilon
