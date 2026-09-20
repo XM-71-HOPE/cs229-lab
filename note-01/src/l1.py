@@ -45,20 +45,6 @@ def batchUpdate(
         return True
     return False
 
-# t = 0
-# T = 10000
-# while(not batchUpdate()):
-#     t+=1
-#     if t>=T:
-#         print("Not converging after " + str(T) + " iterations!")
-#         print(f"theta0: {h.theta0:.6f}")
-#         print(f"theta1: {h.theta1:.6f}")
-#         exit(1)
-
-# print("Converged after " + str(t) + " iterations!")
-# print(f"theta0: {h.theta0:.6f}")
-# print(f"theta1: {h.theta1:.6f}")
-
 def runBatchGD(
         h: Hypothesis,
         alpha : float, 
@@ -81,7 +67,7 @@ def runBatchGD(
     
 h, converged, path = runBatchGD(
     Hypothesis(0., 0.),
-    2e-2,
+    1e-3,
     int(2e4),
     1e-6,
     df
@@ -93,6 +79,3 @@ print(f"theta0: {h.theta0:.6f}")
 print(f"theta1: {h.theta1:.6f}")
 print(f"J initial: {path[0]:.6f}")
 print(f"J final:   {path[-1]:.6f}")
-
-
-
