@@ -31,8 +31,8 @@ def batchUpdate(
         data : pd.DataFrame,
         tolerance: float,
 ) -> bool:
-    x = df["x"].to_numpy()
-    y = df["y"].to_numpy()
+    x = data["x"].to_numpy()
+    y = data["y"].to_numpy()
     dataSize = data.shape[0]
     _h = copy.copy(h)
     for xi, yi in zip(x, y):
@@ -54,12 +54,12 @@ def runBatchGD(
     ) -> tuple[Hypothesis, bool, list[float]]:
     t = 0
     costPath = []
-    costPath.append(computeJ(h, df))
+    costPath.append(computeJ(h, data))
     while(not batchUpdate(
         h, alpha, data, tolerance
     )):
         t+=1
-        costPath.append(computeJ(h, df))
+        costPath.append(computeJ(h, data))
         if t>=maxIterations:
             return h, False, costPath
     return h, True, costPath
